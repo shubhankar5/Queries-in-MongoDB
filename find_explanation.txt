@@ -1,0 +1,205 @@
+All about find() function in Mongodb
+
+(Name of the collection in this database is "netflix")
+
+find(): Basic command to query in mongo db.
+
+Following are some general ways to implement it
+
+	i) To display all the documents (Only top 2 results are shown):
+
+	> db.netflix.find() 
+
+	{ "_id" : ObjectId("5f6e5111e27810a49db4abab"), "show_id" : 80117401, "type" : "Movie", "title" : "Jandino: Whatever it Takes", "director" : "", "cast" : "Jandino Asporaat", "country" : "United Kingdom", "date_added" : "September 9, 2016", "release_year" : 2016, "rating" : "TV-MA", "duration" : "94 min", "listed_in" : "Stand-Up Comedy", "description" : "Jandino Asporaat riffs on the challenges of raising kids and serenades the audience with a rousing rendition of \"Sex on Fire\" in his comedy show." }
+	{ "_id" : ObjectId("5f6e5111e27810a49db4abac"), "show_id" : 80125979, "type" : "Movie", "title" : "#realityhigh", "director" : "Fernando Lebrija", "cast" : "Nesta Cooper, Kate Walsh, John Michael Higgins, Keith Powers, Alicia Sanz, Jake Borelli, Kid Ink, Yousef Erakat, Rebekah Graf, Anne Winters, Peter Gilroy, Patrick Davis", "country" : "United States", "date_added" : "September 8, 2017", "release_year" : 2017, "rating" : "TV-14", "duration" : "99 min", "listed_in" : "Comedies", "description" : "When nerdy high schooler Dani finally attracts the interest of her longtime crush, she lands in the cross hairs of his ex, a social media celebrity." }
+
+
+	ii) To display all the documents in a readable format (Only top result is shown): 
+
+	> db.netflix.find().pretty()
+
+	Explanation: pretty() makes it readable
+
+	{
+		"_id" : ObjectId("5f6e5111e27810a49db4abab"),
+		"show_id" : 80117401,
+		"type" : "Movie",
+		"title" : "Jandino: Whatever it Takes",
+		"director" : "",
+		"cast" : "Jandino Asporaat",
+		"country" : "United Kingdom",
+		"date_added" : "September 9, 2016",
+		"release_year" : 2016,
+		"rating" : "TV-MA",
+		"duration" : "94 min",
+		"listed_in" : "Stand-Up Comedy",
+		"description" : "Jandino Asporaat riffs on the challenges of raising kids and serenades the audience with a rousing rendition of \"Sex on Fire\" in his comedy show."
+	}
+
+
+	iii) To display first n(=3 in our case) documents in a readable format:
+
+	> db.netflix.find().limit(3).pretty()
+
+	Explanation: limit(n) gives first n documents
+	
+	{
+		"_id" : ObjectId("5f6e5111e27810a49db4abab"),
+		"show_id" : 80117401,
+		"type" : "Movie",
+		"title" : "Jandino: Whatever it Takes",
+		"director" : "",
+		"cast" : "Jandino Asporaat",
+		"country" : "United Kingdom",
+		"date_added" : "September 9, 2016",
+		"release_year" : 2016,
+		"rating" : "TV-MA",
+		"duration" : "94 min",
+		"listed_in" : "Stand-Up Comedy",
+		"description" : "Jandino Asporaat riffs on the challenges of raising kids and serenades the audience with a rousing rendition of \"Sex on Fire\" in his comedy show."
+	}
+	{
+		"_id" : ObjectId("5f6e5111e27810a49db4abac"),
+		"show_id" : 80125979,
+		"type" : "Movie",
+		"title" : "#realityhigh",
+		"director" : "Fernando Lebrija",
+		"cast" : "Nesta Cooper, Kate Walsh, John Michael Higgins, Keith Powers, Alicia Sanz, Jake Borelli, Kid Ink, Yousef Erakat, Rebekah Graf, Anne Winters, Peter Gilroy, Patrick Davis",
+		"country" : "United States",
+		"date_added" : "September 8, 2017",
+		"release_year" : 2017,
+		"rating" : "TV-14",
+		"duration" : "99 min",
+		"listed_in" : "Comedies",
+		"description" : "When nerdy high schooler Dani finally attracts the interest of her longtime crush, she lands in the cross hairs of his ex, a social media celebrity."
+	}
+	{
+		"_id" : ObjectId("5f6e5111e27810a49db4abad"),
+		"show_id" : 80163890,
+		"type" : "TV Show",
+		"title" : "Apaches",
+		"director" : "",
+		"cast" : "Alberto Ammann, Eloy Azorín, Verónica Echegui, Lucía Jiménez, Claudia Traisac",
+		"country" : "Spain",
+		"date_added" : "September 8, 2017",
+		"release_year" : 2016,
+		"rating" : "TV-MA",
+		"duration" : "1 Season",
+		"listed_in" : "Crime TV Shows, International TV Shows, Spanish-Language TV Shows",
+		"description" : "A young journalist is forced into a life of crime to save his father and family in this series based on the novel by Miguel Sáez Carral."
+	}
+
+
+	iv) To display some of the fields("type", "title" and "release_year") of first n(=5 in our case) documents:
+
+	> db.netflix.find({}, {"_id":0, "type":1, "title":1, "release_year":1}).limit(5)
+
+	Explanation: Second argument in find() is for projection, i.e, which fields do you want to query. By default "_id" has a value of 1, so we changed it to 0.
+
+	{ "type" : "Movie", "title" : "Jandino: Whatever it Takes", "release_year" : 2016 }
+	{ "type" : "Movie", "title" : "#realityhigh", "release_year" : 2017 }
+	{ "type" : "TV Show", "title" : "Apaches", "release_year" : 2016 }
+	{ "type" : "TV Show", "title" : "Transformers Prime", "release_year" : 2013 }
+	{ "type" : "Movie", "title" : "Fabrizio Copano: Solo pienso en mi", "release_year" : 2017 }
+
+
+	v) To display some of the fields("type", "title" and "release_year" in our case) of first n(=5 in our case) documents which satsify a condition(released in or after 2016):
+
+	> db.netflix.find({"release_year":{$gte:2016}}, {"_id":0, "type":1, "title":1, "release_year":1}).limit(5)
+
+	Explanation: First argument in find() is for conditions for the query, which in our case was greater than equal to which in mongodb is given by $gte.
+
+	{ "type" : "Movie", "title" : "Jandino: Whatever it Takes", "release_year" : 2016 }
+	{ "type" : "Movie", "title" : "#realityhigh", "release_year" : 2017 }
+	{ "type" : "TV Show", "title" : "Apaches", "release_year" : 2016 }
+	{ "type" : "Movie", "title" : "Fabrizio Copano: Solo pienso en mi", "release_year" : 2017 }
+	{ "type" : "TV Show", "title" : "Fire Chasers", "release_year" : 2017 }
+
+
+	vi) To display some of the fields("type", "title" and "release_year" in our case) of first n(=5 in our case) documents which satsify multiple conditions(Movies released in or after 2016 and whose titles start with 'A'):
+
+	> db.netflix.find({$and:[{"type":"Movie"}, {"title":{$regex:"^A", $options: "i"}}, {"release_year":{$gte:2016}}]}, {"_id":0, "type":1, "title":1, "release_year":1}).limit(5)
+
+	Explanation: Use of $and is done to implement multiple queries in mongodb and [] denotes an array(of conditions). Use of $regex has been done to implement begins with "A" and "i" value of $options denotes the case insensitive conditon.
+
+	{ "type" : "Movie", "title" : "Article 15", "release_year" : 2019 }
+	{ "type" : "Movie", "title" : "American Factory: A Conversation with the Obamas", "release_year" : 2019 }
+	{ "type" : "Movie", "title" : "Amanda Knox", "release_year" : 2016 }
+	{ "type" : "Movie", "title" : "Animal World", "release_year" : 2018 }
+	{ "type" : "Movie", "title" : "A Wrinkle in Time", "release_year" : 2018 }
+
+	vii) To display some of the fields("title", "cast" and "release_year" in our case) of first n(=5 in our case) documents which satsify one condition(has  Jeff Dunham in cast) or the other(has Leonardo DiCaprio in cast):
+
+	> db.netflix.find({$or:[{"cast":"Jeff Dunham"}, {"cast":"Leonardo DiCaprio"}]}, {"_id":0, "title":1, "cast":1, "release_year":1})
+
+	Explanation: Use of $or to apply one query or the other.
+
+	{ "title" : "Jeff Dunham: Beside Himself", "cast" : "Jeff Dunham", "release_year" : 2019 }
+	{ "title" : "Jeff Dunham: Relative Disaster", "cast" : "Jeff Dunham", "release_year" : 2017 }
+	{ "title" : "Jeff Dunham: All Over the Map", "cast" : "Jeff Dunham", "release_year" : 2014 }
+	{ "title" : "Jeff Dunham: Controlled Chaos", "cast" : "Jeff Dunham", "release_year" : 2011 }
+	{ "title" : "Jeff Dunham: Arguing with Myself", "cast" : "Jeff Dunham", "release_year" : 2006 }
+	{ "title" : "Jeff Dunham: Minding the Monsters", "cast" : "Jeff Dunham", "release_year" : 2012 }
+	{ "title" : "Jeff Dunham: Unhinged in Hollywood", "cast" : "Jeff Dunham", "release_year" : 2015 }
+	{ "title" : "Before the Flood", "cast" : "Leonardo DiCaprio", "release_year" : 2016 }
+
+	viii) To display some of the fields("type", title" and "release_year" in our case) of first n(=5 in our case) documents which do not satsify a condition(not released after 2015):
+
+	> db.netflix.find({"release_year":{$not:{$gte:2015}}}, {"_id":0, "type":1, "title":1, "release_year":1}).limit(5)
+
+	Explanation: Use of $not to query for all the documents except that condition.
+
+	{ "type" : "TV Show", "title" : "Transformers Prime", "release_year" : 2013 }
+	{ "type" : "Movie", "title" : "Automata", "release_year" : 2014 }
+	{ "type" : "Movie", "title" : "Good People", "release_year" : 2014 }
+	{ "type" : "Movie", "title" : "Krish Trish and Baltiboy", "release_year" : 2009 }
+	{ "type" : "Movie", "title" : "Krish Trish and Baltiboy: Battle of Wits", "release_year" : 2013 }
+
+	viii) To display some of the fields("type", title", "country" and "release_year" in our case) of first n(=5 in our case) documents which satisfy a complex query(Movies released in or before 2015 in United Kingdom and India and whose titles start with 'D' or 'M'):
+
+	> db.netflix.find({$and:[{"release_year":{$lte:2015}}, {"country":{$in:["United Kingdom", "India"]}}, {$or:[{"title":{$regex:"^D", $options:"i"}},{"title":{$regex:"^M", $options:"i"}}]}]}, {"_id":0, "type":1, "title":1, "country":1, "release_year":1}).limit(5)
+
+	Explanation: Use of $and to join all the queries and or inside to form inner queries. Use of $in to check whether the country is present in the given array.
+
+	{ "type" : "Movie", "title" : "Do Paise Ki Dhoop Chaar Aane Ki Baarish", "country" : "India", "release_year" : 2009 }
+	{ "type" : "Movie", "title" : "Manoranjan", "country" : "India", "release_year" : 1974 }
+	{ "type" : "Movie", "title" : "Mujrim", "country" : "India", "release_year" : 1989 }
+	{ "type" : "TV Show", "title" : "Dead Set", "country" : "United Kingdom", "release_year" : 2008 }
+	{ "type" : "Movie", "title" : "My Brother ... Nikhil", "country" : "India", "release_year" : 2005 }
+
+	ix) To display some of the fields("type", title", "country" and "release_year" in our case) of first n(=5 in our case) documents which satisfy a complex query(Movies released in or before 2015 in United Kingdom and India and whose titles start with 'D' or 'M') in Ascending order(here based on release year):
+
+	> db.netflix.find({$and:[{"release_year":{$lte:2015}}, {"country":{$in:["United Kingdom", "India"]}}, {$or:[{"title":{$regex:"^D", $options:"i"}},{"title":{$regex:"^M", $options:"i"}}]}]}, {"_id":0, "type":1, "title":1, "country":1, "release_year":1}).limit(5).sort({"release_year":1})
+
+	Explanation: sort() function sorts the obtained documents after querying. Here 1 denotes ascending order. For descending order -1 needs to be added.
+
+	{ "type" : "Movie", "title" : "Manoranjan", "country" : "India", "release_year" : 1974 }
+	{ "type" : "TV Show", "title" : "Monty Python's Flying Circus", "country" : "United Kingdom", "release_year" : 1974 }
+	{ "type" : "Movie", "title" : "Monty Python and the Holy Grail", "country" : "United Kingdom", "release_year" : 1975 }
+	{ "type" : "TV Show", "title" : "Dad's Army", "country" : "United Kingdom", "release_year" : 1977 }
+	{ "type" : "Movie", "title" : "Don", "country" : "India", "release_year" : 1978 }
+
+	x) Same as (ix) but with changed order: 
+
+	> db.netflix.find({$and:[{"release_year":{$lte:2015}}, {"country":{$in:["United Kingdom", "India"]}}, {$or:[{"title":{$regex:"^D", $options:"i"}},{"title":{$regex:"^M", $options:"i"}}]}]}, {"_id":0, "type":1, "title":1, "country":1, "release_year":1}).sort({"release_year":1}).limit(5)
+
+	Explanation: Here even after changing the order of sort() and limit() from (ix), the output documents remain the same. This proves that the queries are independent of the order of pretty(), sort() and limit().	
+
+	{ "type" : "Movie", "title" : "Manoranjan", "country" : "India", "release_year" : 1974 }
+	{ "type" : "TV Show", "title" : "Monty Python's Flying Circus", "country" : "United Kingdom", "release_year" : 1974 }
+	{ "type" : "Movie", "title" : "Monty Python and the Holy Grail", "country" : "United Kingdom", "release_year" : 1975 }
+	{ "type" : "TV Show", "title" : "Dad's Army", "country" : "United Kingdom", "release_year" : 1977 }
+	{ "type" : "Movie", "title" : "Don", "country" : "India", "release_year" : 1978 }
+
+
+
+
+
+
+
+
+
+
+
+
+
