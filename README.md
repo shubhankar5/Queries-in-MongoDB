@@ -16,7 +16,7 @@ The dataset is available here: https://www.kaggle.com/shivamb/netflix-shows
 Before opening the mongo shell, mongoimport command is used to import a file in the database.  
 **Syntax: mongoimport --type csv -d mydb -c netflix --headerline --drop netflix_titles.csv**   
 Here,   
-**--type** is the type of file,  
+**type** is the type of file,  
 **d** is the database in which the file has to be imported  
 **c** is the collection in which the file has to be imported  
 **headerline** denotes that first line of the file has headers  
