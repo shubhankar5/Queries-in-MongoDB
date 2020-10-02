@@ -2,7 +2,7 @@
 
 **All types of queries in mongodb - Basic to Advanced**
 
-find(), aggregate() and mapReduce() are the main querying functions in mongodb and you can query each and every complex statement with any of these.
+find() and aggregate() are the functions mainly used for querying in mongodb and you can query each and every complex statement with any of them.
 
 Here I have tried out various types of queries and played with the above mentioned functions in order to generate queries. Along with every query, I have added the explanation for the syntax.
 
