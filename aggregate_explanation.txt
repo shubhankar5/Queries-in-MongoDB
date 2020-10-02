@@ -1,0 +1,276 @@
+All about aggregate() function in MongoDB
+
+(Name of the collection in this database is "netflix")
+
+aggregate(): Command to form aggregation queries and execute pipelines.
+
+The following are some general ways to implement it
+
+	i) To display some of the fields("type", title", "country" and "release_year" in our case) of first n(=5 in our case) documents which satisfy a complex query(Movies released in or before 2015 in United Kingdom and India and whose titles start with 'D' or 'M') in Ascending order(here based on release year):
+	(This is same as (ix) in find() explanation but here we are implementing using aggregate() function)
+
+	> db.netflix.aggregate(
+		{
+			$match:{
+				$and:[
+					{"release_year":{$lte:2015}},
+					{"country":{$in:["United Kingdom", "India"]}},
+					{
+						$or:[
+							{"title":{$regex:"^D", $options:"i"}},{"title":{$regex:"^M", $options:"i"}}
+						]
+					}
+				]
+			}
+		},
+		{
+			$sort:{
+				"release_year":1
+			}
+		},
+		{
+			$limit:5
+		},
+		{
+			$project:{
+				"_id":0,
+				"type":1, 
+				"title":1, 
+				"country":1, 
+				"release_year":1
+			}
+		}
+	)
+
+	Explanation: Pipelining is implemented using aggregate with 4 stages.
+	1) $match matches all the documents that satisfy the given condition in it and then return these documents to the next stage.
+	2) $sort gets the input documents returned from match and then sorts it according to the given condition and sends it to the next stage.
+	3) $limit gets the input documents returned from sort and then limits the documents to the given condition and sends it to the next stage.
+	4) $project gets the input documents returned from limit and then outputs only the given fields in the final document list.
+
+	{ "type" : "Movie", "title" : "Manoranjan", "country" : "India", "release_year" : 1974 }
+	{ "type" : "TV Show", "title" : "Monty Python's Flying Circus", "country" : "United Kingdom", "release_year" : 1974 }
+	{ "type" : "Movie", "title" : "Monty Python and the Holy Grail", "country" : "United Kingdom", "release_year" : 1975 }
+	{ "type" : "TV Show", "title" : "Dad's Army", "country" : "United Kingdom", "release_year" : 1977 }
+	{ "type" : "Movie", "title" : "Don", "country" : "India", "release_year" : 1978 }
+
+	Notes: 
+
+	As we can see, the documents queried are the same as (ix) using find(). Hence, we can conclude that this kind of queries can be performed both by find() as well as aggregate(). Let's analyze the execution time for both cases. We can do this by simply using explain("executionStats") with both the queries. The following shows only two fields out of the entire result obtained from the explain function:
+
+	Using find(): 	"executionTimeMillis" : 14
+					"totalDocsExamined" : 6234
+
+
+	Using aggregate(): 	"executionTimeMillis" : 14
+						"totalDocsExamined" : 6234
+
+	Hence, we see that both perform equally. So it's your choice which one to use. 
+
+	Another important thing to note is that totalDocsExamined, which denotes the total no.of documents examined is equal to the total no.of documents in both the cases. This needs to be improved as for large datasets, this query will be very slow. Hence, for optimizing such queries we should always use indexing.
+
+	One final note here is that, whether $match and $limit are arranged in any order with $sort, $match, and $limit will be executed first to minimize the number of documents. So the order of these stages is not relevant.
+
+	ii) To obtain the count of all the documents satisfying a particular condition(movies released in 2016):
+
+	> db.netflix.aggregate(
+		{
+			$match:{
+				"type":"Movie"
+			}
+		},
+		{
+			$match:{
+				"release_year":2016
+			}
+		},
+		{
+			$count:"movies_released_in_2016"
+		}
+	)
+
+	Explanation: $count stage is used to count all the remaining documents in the pipeline and it assigns it to the new field specified.
+
+	Note: 2 different $match stages are used in this query. Is that different from using an $and to join both the conditions? Well no, the aggregation optimizer merges all the $match and creates a joint condition during the optimizing phase.
+
+	{ "movies_released_in_2016" : 593 }
+
+	iii) To create a new collection with the documents that satisfy a particular condition(movies released in 2016):
+
+	> db.netflix.aggregate(
+		{
+			$match:{
+				$and:[
+					{"type":"Movie"},
+					{"release_year":2016}
+				]
+			}
+		},
+		{
+			$merge:{
+				into:"movies_released_in_2016"
+			}
+		}
+	)
+
+	Explanation: $merge is used to push the documents in the pipeline to a new collection specified in the "into" argument.
+
+	> show collections
+	
+	movies_released_in_2016
+	netflix
+
+	> db.movies_released_in_2016.find({},{"title":1,"release_year":1}).limit(5)
+	
+	{ "_id" : ObjectId("5f6e5111e27810a49db4abab"), "release_year" : 2016, "title" : "Jandino: Whatever it Takes" }
+	{ "_id" : ObjectId("5f6e5111e27810a49db4abb9"), "release_year" : 2016, "title" : "Krish Trish and Baltiboy: Best Friends Forever" }
+	{ "_id" : ObjectId("5f6e5111e27810a49db4abcc"), "release_year" : 2016, "title" : "Cézanne et moi" }
+	{ "_id" : ObjectId("5f6e5111e27810a49db4abdb"), "release_year" : 2016, "title" : "One Day" }
+	{ "_id" : ObjectId("5f6e5111e27810a49db4abdf"), "release_year" : 2016, "title" : "Carrie Pilby" }
+
+	Note: As we can see, a new collection is created and it only has the documents satisfying the given condition.
+
+	iv) To group all the documents which satisfy a particular condition(released in 2016) and display all the stats like minimum, maximum, first, last(duration wise in our case) and the total number of items in the group:
+
+	> db.netflix.aggregate(
+		{
+			$match:{
+				"release_year":2016
+			}
+		},
+		{
+			$group:{
+				"_id":"$type",
+				"first_screen_time":{
+					$first:"$duration"
+				},
+				"last_screen_time":{
+					$last:"$duration"
+				},
+				"min_screen_time":{
+					$min:"$duration"
+				},
+				"max_screen_time":{
+					$max:"$duration"
+				},
+				"no_of_titles":{
+					$sum:1
+				}
+			}
+		}
+	).pretty()
+
+	Explanation: $group stage is used to group the documents in the pipeline on criteria given in "_id". $first, $last, $min, $max are used to get the first, last, min, and max document in the group respectively. $sum is used to count the number of objects starting from 1.
+
+	{
+		"_id" : "Movie",
+		"first_screen_time" : "94 min",
+		"last_screen_time" : "60 min",
+		"min_screen_time" : "100 min",
+		"max_screen_time" : "99 min",
+		"no_of_titles" : 593
+	}
+	{
+		"_id" : "TV Show",
+		"first_screen_time" : "1 Season",
+		"last_screen_time" : "4 Seasons",
+		"min_screen_time" : "1 Season",
+		"max_screen_time" : "8 Seasons",
+		"no_of_titles" : 237
+	}
+
+	v) To satisfy a particular condition(Movie released between 2000-20 both included) and group on the basis on its basis in descending order and count documents in each group:
+
+	> db.netflix.aggregate(
+		{
+			$match:{
+				$and:[
+					{"type":"Movie"},
+					{"release_year":{$gte:2000}},
+					{"release_year":{$lte:2020}}
+				]
+			}
+		},
+		{
+			$group:{
+				"_id":"$release_year",
+				"no_of_movies":{$sum:1}
+			}
+		},
+		{
+			$sort:{
+				"_id":-1
+			}
+		}
+	)
+
+	Explanation: $group is used to group release_year wise and then $sort to sort in descending order.
+
+	{ "_id" : 2020, "no_of_movies" : 6 }
+	{ "_id" : 2019, "no_of_movies" : 400 }
+	{ "_id" : 2018, "no_of_movies" : 646 }
+	{ "_id" : 2017, "no_of_movies" : 682 }
+	{ "_id" : 2016, "no_of_movies" : 593 }
+	{ "_id" : 2015, "no_of_movies" : 363 }
+	{ "_id" : 2014, "no_of_movies" : 213 }
+	{ "_id" : 2013, "no_of_movies" : 177 }
+	{ "_id" : 2012, "no_of_movies" : 125 }
+	{ "_id" : 2011, "no_of_movies" : 100 }
+	{ "_id" : 2010, "no_of_movies" : 111 }
+	{ "_id" : 2009, "no_of_movies" : 87 }
+	{ "_id" : 2008, "no_of_movies" : 87 }
+	{ "_id" : 2007, "no_of_movies" : 60 }
+	{ "_id" : 2006, "no_of_movies" : 59 }
+	{ "_id" : 2005, "no_of_movies" : 51 }
+	{ "_id" : 2004, "no_of_movies" : 40 }
+	{ "_id" : 2003, "no_of_movies" : 35 }
+	{ "_id" : 2002, "no_of_movies" : 35 }
+	{ "_id" : 2001, "no_of_movies" : 30 }
+	{ "_id" : 2000, "no_of_movies" : 28 }
+
+	vi) To satisfy a particular condition(released in 2018 in United States) and grouped by various other conditions(here "type" and "listen_in"  which is the genre of the movie/show) and show the maximum screen duration in each group:
+
+	> db.netflix.aggregate(
+		{
+			$match:{
+				$and:[
+					{"release_year":2018},
+					{"country":"United States"}
+				]
+			}
+		},
+		{
+			$group:{
+				"_id":{
+					"type":"$type",
+					"genre":"$listed_in"
+				},
+				"max_duration":{
+					$max:"$duration"
+				}
+			}
+		}
+	)
+
+	Explanation: $group is used to group based on both "type" and "listed_in" and the maximum duration of each genre is returned.
+
+	{ "_id" : { "type" : "Movie", "genre" : "Children & Family Movies" }, "max_duration" : "99 min" }
+	{ "_id" : { "type" : "TV Show", "genre" : "TV Action & Adventure, TV Sci-Fi & Fantasy" }, "max_duration" : "4 Seasons" }
+	{ "_id" : { "type" : "Movie", "genre" : "Comedies, Romantic Movies" }, "max_duration" : "97 min" }
+	{ "_id" : { "type" : "TV Show", "genre" : "Stand-Up Comedy & Talk Shows" }, "max_duration" : "3 Seasons" }
+	{ "_id" : { "type" : "TV Show", "genre" : "Kids' TV, TV Comedies" }, "max_duration" : "6 Seasons" }
+	{ "_id" : { "type" : "Movie", "genre" : "Children & Family Movies, Dramas, Faith & Spirituality" }, "max_duration" : "111 min" }
+	{ "_id" : { "type" : "TV Show", "genre" : "Crime TV Shows, Romantic TV Shows, TV Dramas" }, "max_duration" : "1 Season" }
+	{ "_id" : { "type" : "Movie", "genre" : "Dramas, Independent Movies, LGBTQ Movies" }, "max_duration" : "94 min" }
+	{ "_id" : { "type" : "TV Show", "genre" : "TV Dramas, TV Horror, TV Mysteries" }, "max_duration" : "5 Seasons" }
+	{ "_id" : { "type" : "Movie", "genre" : "Horror Movies, Thrillers" }, "max_duration" : "96 min" }
+	{ "_id" : { "type" : "Movie", "genre" : "Dramas, Independent Movies, Sci-Fi & Fantasy" }, "max_duration" : "97 min" }
+	{ "_id" : { "type" : "TV Show", "genre" : "TV Dramas, TV Sci-Fi & Fantasy" }, "max_duration" : "7 Seasons" }
+	{ "_id" : { "type" : "TV Show", "genre" : "Crime TV Shows, TV Comedies, TV Dramas" }, "max_duration" : "1 Season" }
+	{ "_id" : { "type" : "TV Show", "genre" : "TV Horror, TV Mysteries, TV Sci-Fi & Fantasy" }, "max_duration" : "1 Season" }
+	{ "_id" : { "type" : "TV Show", "genre" : "TV Comedies, TV Sci-Fi & Fantasy, Teen TV Shows" }, "max_duration" : "2 Seasons" }
+	{ "_id" : { "type" : "Movie", "genre" : "Action & Adventure, Comedies, Dramas" }, "max_duration" : "83 min" }
+	{ "_id" : { "type" : "TV Show", "genre" : "Romantic TV Shows, TV Comedies" }, "max_duration" : "1 Season" }
+	{ "_id" : { "type" : "TV Show", "genre" : "TV Horror, TV Mysteries, TV Thrillers" }, "max_duration" : "8 Seasons" }
+	{ "_id" : { "type" : "TV Show", "genre" : "Crime TV Shows, Docuseries" }, "max_duration" : "2 Seasons" }
+	{ "_id" : { "type" : "TV Show", "genre" : "Crime TV Shows, TV Dramas, TV Mysteries" }, "max_duration" : "5 Seasons" }
