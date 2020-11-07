@@ -10,11 +10,12 @@ Here I have tried out various types of queries and played with the above mention
 
 ### Downloading the dataset ###
 Netflix_titles.csv from Kaggle.  
-The dataset is available here: https://www.kaggle.com/shivamb/netflix-shows  
+The dataset is available [here](https://www.kaggle.com/shivamb/netflix-shows) 
 
 ### Importing the datset in Mongodb ###
 Before opening the mongo shell, mongoimport command is used to import a file in the database.  
 **Syntax: mongoimport --type csv -d mydb -c netflix --headerline --drop netflix_titles.csv**   
+  
 Here,   
 **type** is the type of file,  
 **d** is the database in which the file has to be imported  
