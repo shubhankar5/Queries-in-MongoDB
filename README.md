@@ -1,6 +1,6 @@
-# Queries-in-Mongodb
+# Queries-in-MongoDB
 
-**All types of queries in mongodb - Basic to Advanced**
+**All types of queries in MongoDB - Basic to Advanced**
 
 find() and aggregate() are the functions mainly used for querying in mongodb and you can query each and every complex statement with any of them.
 
@@ -12,7 +12,7 @@ Here I have tried out various types of queries and played with the above mention
 Netflix_titles.csv from Kaggle.  
 The dataset is available [here](https://www.kaggle.com/shivamb/netflix-shows) 
 
-### Importing the datset in Mongodb ###
+### Importing the datset in MongoDB ###
 Before opening the mongo shell, mongoimport command is used to import a file in the database.  
 **Syntax: mongoimport --type csv -d mydb -c netflix --headerline --drop netflix_titles.csv**   
   
